@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Buyer Connect Prototype</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Single light theme by request: soft blue-grey page ground so white cards and the navy phone stand out.
+   Layout: product header → step rail → stage (phone or RM console) beside a walkthrough panel. */
+:root{
+  --bg:#EBF1F7; --surface:#FFFFFF; --surface-2:#EEF2F6; --line:#DCE3EA;
+  --ink:#122334; --ink-2:#405263; --ink-3:#5E6E7D;
+  --navy:#13324F; --navy-2:#1E4468; --on-navy:#FFFFFF; --on-navy-2:#C9D6E3;
+  --accent:#1F5FAD; --accent-ink:#FFFFFF; --accent-soft:#E3EDF9;
+  --good:#1D6B3A; --good-soft:#E3F3E8; --warn:#8A4B00; --warn-soft:#FFF1DE; --bad:#A12020; --bad-soft:#FCE9E9;
+  --bubble-in:#FFFFFF; --bubble-out:#D9EAFE; --chat-bg:#E9EEF3;
+  --shadow:0 1px 2px rgba(18,35,52,.06),0 8px 24px rgba(18,35,52,.06);
+  --f-body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-head:"Space Grotesk",Inter,system-ui,sans-serif;
+}
+
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-head);text-wrap:balance;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+.top{background:var(--navy);color:var(--on-navy)}
+.top .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding-block:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.mark{width:36px;height:36px;border-radius:10px;background:var(--navy-2);display:grid;place-items:center}
+.brand h1{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.brand p{margin:0;font-size:13px;color:var(--on-navy-2)}
+.pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+.top .pill{background:var(--navy-2);color:var(--on-navy-2)}
+
+/* step rail */
+.rail{border-bottom:1px solid var(--line);background:var(--surface)}
+.rail .wrap{display:flex;gap:8px;overflow-x:auto;padding-block:12px;scrollbar-width:thin}
+.step{flex:0 0 auto;display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px 8px 8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-2);min-height:44px}
+.step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.step[aria-current="step"]{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.step[aria-current="step"] .n{background:var(--accent);color:var(--accent-ink)}
+
+/* main grid */
+main .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:32px;padding-block:28px 48px;align-items:start}
+main.wide .wrap{grid-template-columns:minmax(0,1fr)}
+.stage{display:flex;justify-content:center;min-width:0}
+
+/* walkthrough */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow);position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+main.wide .panel{position:static}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.panel h2{font-size:24px;font-weight:600;line-height:1.2}
+.panel p{margin:0;color:var(--ink-2);max-width:62ch}
+.facts{display:grid;gap:10px;margin:0}
+.facts div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;font-size:14px;padding-top:10px;border-top:1px solid var(--line)}
+.facts dt{color:var(--ink-3);font-weight:500}
+.facts dd{margin:0;font-weight:500}
+.nav{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;min-height:40px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.note{font-size:13px;color:var(--ink-3)}
+
+/* phone */
+.phone{width:min(375px,100%);height:760px;border-radius:40px;background:var(--navy);padding:12px;box-shadow:var(--shadow)}
+.screen{height:100%;border-radius:30px;overflow:hidden;background:var(--chat-bg);display:flex;flex-direction:column;position:relative}
+.ph-head{display:flex;gap:10px;align-items:center;padding:14px 14px 12px;background:var(--navy-2);color:var(--on-navy)}
+.ph-head .av{width:36px;height:36px;border-radius:50%;background:var(--navy);display:grid;place-items:center;font-weight:700;font-size:13px}
+.ph-head b{display:block;font-size:15px;font-weight:600}
+.ph-head span{font-size:12px;color:var(--on-navy-2)}
+.ph-back{border:0;background:transparent;color:var(--on-navy);font-weight:600;cursor:pointer;padding:6px 4px;min-height:40px}
+.thread{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.chip-date{align-self:center;font-size:11px;font-weight:600;color:var(--ink-3);background:var(--surface);padding:3px 10px;border-radius:999px}
+.bub{max-width:88%;border-radius:14px;padding:10px 12px;font-size:14px;background:var(--bubble-in);box-shadow:0 1px 1px rgba(18,35,52,.06);display:flex;flex-direction:column;gap:7px;transition:box-shadow .3s}
+.bub.out{align-self:flex-end;background:var(--bubble-out)}
+.bub.focus{box-shadow:0 0 0 3px var(--accent)}
+.bub .k{font-size:12px;font-weight:700;letter-spacing:.01em}
+.bub .k.blue{color:var(--accent)} .bub .k.amber{color:var(--warn)}
+.bub .meta{font-size:11px;color:var(--ink-3);align-self:flex-end}
+.bub .act{border:0;border-top:1px solid var(--line);background:transparent;color:var(--accent);font-weight:600;padding:9px 0 2px;cursor:pointer;min-height:40px}
+.tag{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;width:fit-content;white-space:nowrap;flex:0 0 auto}
+.tag.good{background:var(--good-soft);color:var(--good)} .tag.warn{background:var(--warn-soft);color:var(--warn)} .tag.bad{background:var(--bad-soft);color:var(--bad)} .tag.info{background:var(--accent-soft);color:var(--accent)}
+.revised{border-top:4px solid var(--warn)}
+.tower{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:end;background:var(--surface-2);border-radius:10px;padding:10px}
+.floors{display:flex;flex-direction:column-reverse;gap:2px}
+.floors i{display:block;height:4px;border-radius:1px;background:var(--line)}
+.floors i.done{background:var(--accent)}
+.tower b{font-family:var(--f-head);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.tower span{font-size:12px;color:var(--ink-3)}
+.composer{display:flex;gap:8px;padding:10px;background:var(--surface);border-top:1px solid var(--line)}
+.composer input{flex:1;min-width:0;height:44px;border:1px solid var(--line);border-radius:22px;padding:0 14px;background:var(--bg)}
+.composer button{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;cursor:pointer}
+
+/* My Home */
+.page{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.card.hero{background:var(--navy-2);border-color:var(--navy-2);color:var(--on-navy)}
+.card.hero small{color:var(--on-navy-2)}
+.card h3{font-size:15px;font-weight:600}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:13.5px}
+.row span:last-child{font-weight:600;text-align:right}
+.row.due{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 10px}
+.ok{color:var(--good)} .pend{color:var(--ink-3)} .amb{color:var(--warn)}
+.upd{font-size:11px;color:var(--ink-3)}
+.big{font-family:var(--f-head);font-size:26px;font-weight:600;line-height:1.1}
+.cta{min-height:46px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer}
+.cta:disabled{background:var(--surface-2);color:var(--ink-3);cursor:not-allowed}
+
+/* referral form */
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;font-weight:600}
+.field input,.field select{height:44px;border:1px solid var(--line);border-radius:9px;padding:0 11px;background:var(--surface)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sec{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.check input{width:20px;height:20px;margin:2px 0 0;flex:0 0 auto}
+.err{font-size:12.5px;color:var(--bad);font-weight:500}
+.track{display:flex;flex-direction:column;gap:0}
+.track div{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);justify-self:center}
+.dot.ok{background:var(--good)} .dot.now{background:var(--warn)}
+
+/* RM console */
+.console{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.c-head{background:var(--navy);color:var(--on-navy);padding:16px 20px;display:flex;flex-wrap:wrap;gap:12px 20px;justify-content:space-between;align-items:center}
+.c-head h3{font-size:18px;font-weight:600}
+.c-head p{margin:0;font-size:12.5px;color:var(--on-navy-2)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--navy-2);border-radius:10px;padding:8px 14px;min-width:120px}
+.kpi.hl{background:var(--surface);color:var(--ink)}
+.kpi small{display:block;font-size:11px;color:var(--on-navy-2);font-weight:500}
+.kpi.hl small{color:var(--ink-3)}
+.kpi b{font-family:var(--f-head);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi em{font-style:normal;font-size:11px;color:var(--on-navy-2);margin-left:6px}
+.kpi.hl em{color:var(--ink-3)}
+.c-body{display:flex;flex-wrap:wrap;gap:0}
+.queue{flex:1 1 320px;max-width:400px;min-width:0;border-right:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.qi{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:5px;cursor:pointer;width:100%}
+.qi[aria-pressed="true"]{border:2px solid var(--accent);padding:11px}
+.qi .t{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.qi .t b{font-size:14px}
+.qi p{margin:0;font-size:13px;color:var(--ink-2)}
+.qi small{font-size:11.5px;color:var(--ink-3)}
+.detail{flex:999 1 520px;min-width:0;display:flex;flex-wrap:wrap;gap:16px;padding:18px;align-items:flex-start}
+.conv{flex:999 1 320px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.ctx{flex:1 1 240px;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.conv textarea{border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:132px;resize:vertical;background:var(--surface)}
+.ctx{flex-basis:280px}.ctx .row span:first-child{white-space:nowrap}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-3);width:100%}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:var(--shadow);z-index:20;max-width:calc(100% - 32px)}
+
+/* secure open, bank card, reply window */
+.mark{color:var(--on-navy);font-weight:700;font-size:13px}
+.linkbtn{border:0;background:transparent;color:var(--accent);font-weight:600;cursor:pointer;padding:0;font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+.otp{height:52px;width:100%;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:var(--surface);font-family:var(--f-head);font-size:24px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums}
+.lock{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good)}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:9px 10px;font-size:12.5px;line-height:1.45}
+.chip-win{font-size:12.5px;font-weight:600;padding:8px 10px;border-radius:9px;line-height:1.4}
+.chip-win.open{background:var(--accent-soft);color:var(--accent)}
+.chip-win.closed{background:var(--warn-soft);color:var(--warn)}
+.foot{font-size:11.5px;color:var(--ink-3);text-align:center;padding:2px 0 8px}
+
+/* screenshot mode: stage only */
+body.shot .top,body.shot .rail,body.shot .panel{display:none}
+body.shot main .wrap{grid-template-columns:minmax(0,1fr);padding-block:24px}
+body.shot .thread{scroll-behavior:auto}
+@media (max-width:900px){main .wrap{grid-template-columns:minmax(0,1fr)}.panel{position:static}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+
+<header class="top"><div class="wrap"><div class="brand"><div class="mark" aria-hidden="true">BC</div><div><h1>Buyer Connect</h1><p>Clickable prototype for Assignment 1, Deliverables 3–4 · sample data only</p></div></div><span class="pill">Prototype</span></div></header>
+
+<nav class="rail" aria-label="Prototype walkthrough">
+  <div class="wrap" id="rail"></div>
+</nav>
+
+<main id="main">
+  <div class="wrap">
+    <section class="stage" id="stage" aria-live="polite"></section>
+    <aside class="panel" id="panel"></aside>
+  </div>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const STEPS=[
+ {id:'update',label:'Monthly update',view:'chat',focus:'b-update',eyebrow:'D3 · Element 1',title:'Every buyer hears from us every month',
+  body:'A tower-specific update arrives on WhatsApp on a fixed date, with slab progress and what happens next. It goes out even when nothing has changed, so silence never has to be interpreted.',
+  facts:[['Serves','All 1,840 buyers'],['Reduces','Construction-progress queries (38% of volume)'],['Replaces','One quarterly email'],['Owner','Site team writes, CX team sends'],['Runs on','Site progress report through an approval form, sent as a WhatsApp utility template · launches weeks 0–8']]},
+ {id:'delay',label:'Possession review',view:'chat',focus:'b-review',eyebrow:'D3 · Element 4 · the unasked-for element',title:'Bad news reaches buyers from us first',
+  body:'Each quarter management confirms or revises the possession date. A revision arrives with the reason, what it means for the buyer and the next review date. Use the switch to compare both outcomes.',
+  facts:[['Serves','Buyers planning rent, school and loans around the date'],['Reduces','Possession-timeline queries (16%) and ~45 escalations a month'],['Why it matters','Delay already carries interest under RERA; silence only adds anger'],['Runs on','Management review record with legal sign-off · launches weeks 0–8']],scenario:true},
+ {id:'payment',label:'Payment alert',view:'chat',focus:'b-pay',eyebrow:'D3 · Element 2 (alert)',title:'Payment demands are announced, not discovered',
+  body:'When a construction stage completes and a demand is raised in the ERP, the buyer gets an alert with the amount and due date. The link opens My Home, the only place bank details appear; they are never sent in the chat.',
+  facts:[['Serves','Every buyer on a construction-linked plan'],['Reduces','Payment-reminder queries (27%)'],['Runs on','ERP demand event, same day · launches weeks 6–14']]},
+ {id:'home',label:'My Home page',view:'home',eyebrow:'D3 · Element 2',title:'One secure page answers "where do I stand?"',
+  body:'Opened from any WhatsApp link. A 6-digit code sent to the buyer’s registered WhatsApp confirms it is them, so a forwarded link is useless, and the phone is then remembered for 30 days. The page shows what has been paid, the full schedule, the one account to pay into and document status, each with a last-updated date.',
+  facts:[['Serves','Each buyer, about their own unit'],['Reduces','Legal and document queries (19%)'],['Security','Code to the registered number · bank details shown only here · downloads watermarked'],['Referral','Shown only when the buyer has no open question and no date change in the last 30 days'],['Runs on','ERP nightly, bank reconciliation, legal tracker · launches weeks 6–14']]},
+ {id:'inbox',label:'RM shared inbox',view:'inbox',eyebrow:'D3 · Element 3 · internal',title:'Questions that need a person are tracked, not lost',
+  body:'Buyer messages land in one shared inbox instead of personal phones. Each is acknowledged instantly with a named RM and a deadline, shown beside the buyer’s live status. WhatsApp allows a free reply only within 24 hours of the buyer’s last message; after that the reply goes as a paid template, so each question shows its window. Try answering Ramesh’s question.',
+  facts:[['Serves','RMs and their managers'],['Replaces','Untracked personal chats where 49% miss 48 hours'],['Headline metric','Inbound per buyer: 4.2 today, target below 3.2'],['Runs on','WhatsApp messages in real time · buyer-to-RM mapping from the CRM · launches weeks 0–8']]},
+ {id:'refer',label:'Refer a friend',view:'refer',eyebrow:'D4 · Referral mechanic',title:'Referrals come from buyers who trust us, with qualified leads',
+  body:'Invites open at booking and at the quarterly site-visit day, and pause while a buyer has an open question or a recent date change. The referrer names one friend and confirms budget, size, timeline and consent. The reward is paid only on a registered Agreement for Sale.',
+  facts:[['Incentive','₹50,000 to referrer; 6 months’ maintenance waived for the friend (subject to legal sign-off)'],['Friction','One friend at a time; friends already with sales or a broker don’t qualify'],['90-day signal','Referral site visits: working at ~20 a month, failing under 10'],['Runs on','Sales CRM with a channel-partner duplicate check · payout on registration · launches month 4+']]}
+];
+const S={step:'update',scenario:'revised',queryOpen:true,replied:false,selected:'q1',ref:{sent:false,err:''},verified:false,remember:true,resends:3,otpErr:'',otpVal:'',showBank:false,pendingHl:null,
+ queue:[
+  {id:'q1',who:'Ramesh K. · B-1204',type:'Possession',text:'Will the revised date change my home loan disbursal?',left:'5h left',cls:'warn',rm:'Priya',buyer:true,h:5,win:'6h 42m'},
+  {id:'q2',who:'Buyer · A-0807',type:'Modification',text:'Can I change the kitchen layout before slab 10?',left:'2h left · flagged to manager',cls:'bad',rm:'Arjun',h:2,win:null},
+  {id:'q3',who:'Buyer · B-0402',type:'Documents',text:'When will the bank NOC for disbursal be issued?',left:'22h left',cls:'info',rm:'Priya',h:22,win:null},
+  {id:'q4',who:'Buyer · C-0310',type:'Payment',text:'Receipt for my last instalment has not arrived.',left:'31h left',cls:'info',rm:'Meera',h:31,win:'7h'}
+ ], answered:0, extra:[]};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const idx=()=>STEPS.findIndex(s=>s.id===S.step);
+const dateFor=()=>S.scenario==='revised'?{now:'July 2028',was:'May 2028'}:{now:'May 2028',was:null};
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>{t.hidden=true},3200)}
+
+function rail(){
+  $('rail').innerHTML=STEPS.map((s,i)=>`<button type="button" class="step" data-go="${s.id}" ${s.id===S.step?'aria-current="step"':''}><span class="n">${i+1}</span>${esc(s.label)}</button>`).join('');
+}
+function panel(){
+  const s=STEPS[idx()];const i=idx();
+  $('panel').innerHTML=`<div class="eyebrow">Step ${i+1} of ${STEPS.length} · ${esc(s.eyebrow)}</div>
+   <h2>${esc(s.title)}</h2><p>${esc(s.body)}</p>
+   ${s.scenario?`<div><div class="note" style="margin-bottom:6px">Quarterly review outcome</div><div class="seg" role="group" aria-label="Review outcome"><button type="button" data-scn="ontrack" aria-pressed="${S.scenario==='ontrack'}">Date confirmed</button><button type="button" data-scn="revised" aria-pressed="${S.scenario==='revised'}">Date revised</button></div></div>`:''}
+   <dl class="facts">${s.facts.map(f=>`<div><dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd></div>`).join('')}</dl>
+   <div class="nav"><button type="button" class="btn" data-go="${i>0?STEPS[i-1].id:''}" ${i===0?'disabled':''}>Previous</button><button type="button" class="btn primary" data-go="${i<STEPS.length-1?STEPS[i+1].id:''}" ${i===STEPS.length-1?'disabled':''}>Next step</button></div>
+   <p class="note">Everything here is clickable. Sample data only; names, amounts and dates are illustrative.</p>`;
+}
+
+function phoneHead(back,title,sub){
+  return `<div class="ph-head">${back?`<button type="button" class="ph-back" data-view="${back}" aria-label="Back">&#8249; Back</button>`:`<div class="av" aria-hidden="true">BC</div>`}<div><b>${esc(title)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`;
+}
+function tower(done,total){
+  let f='';for(let k=1;k<=total;k++)f+=`<i class="${k<=done?'done':''}"></i>`;
+  return `<div class="tower"><div class="floors" aria-hidden="true">${f}</div><div><b>${done}<span style="font-size:15px;color:var(--ink-3)">/${total}</span></b><br><span>slabs complete · Tower B</span></div></div>`;
+}
+function chat(){
+  const d=dateFor();
+  const review=S.scenario==='revised'
+   ?`<div class="bub revised" id="b-review"><div class="row" style="align-items:center"><span class="k amber">Quarterly possession review</span><span class="tag warn">Date revised</span></div>
+      <div>We're telling you first: Tower B possession moves from <b>${d.was}</b> to <b>${d.now}</b>.</div>
+      <div style="font-size:13px;color:var(--ink-2)"><b>Why:</b> labour on site has been slower to return after Diwali than planned, so slabs 15–22 will take about 8 weeks longer.<br><b>For you:</b> delay compensation applies as per your agreement.<br><b>Next review:</b> 15 February.</div>
+      <button type="button" class="act" data-view="home">See revised timeline</button><span class="meta">2 Dec · 10:00</span></div>`
+   :`<div class="bub" id="b-review"><div class="row" style="align-items:center"><span class="k blue">Quarterly possession review</span><span class="tag good">Date confirmed</span></div>
+      <div>Management reviewed Tower B this quarter. Possession stays <b>${d.now}</b>. If this ever changes, you will hear it from us first, with the reason.</div>
+      <button type="button" class="act" data-view="home">Open My Home</button><span class="meta">2 Dec · 10:00</span></div>`;
+  const q=S.queue.find(x=>x.id==='q1');
+  const buyerMsgs=`<div class="bub out"><div>${esc(q?q.text:'Will the revised date change my home loan disbursal?')}</div><span class="meta">2 Dec · 18:42</span></div>
+    <div class="bub"><div style="font-size:13px;color:var(--ink-2)">Got it. <b>Priya</b>, your relationship manager, will reply by <b>Thu, 5 pm</b>.</div><span class="meta">Auto-reply · 18:42</span></div>
+    ${S.replied?`<div class="bub" id="b-reply"><span class="k blue">Priya · Relationship manager</span><div>${esc(S.replyText)}</div><span class="meta">3 Dec · 11:05</span></div>`:''}`;
+  const extras=S.extra.map(e=>`<div class="bub out"><div>${esc(e)}</div><span class="meta">Now</span></div><div class="bub"><div style="font-size:13px;color:var(--ink-2)">Got it. <b>Priya</b> will reply within 48 hours.</div><span class="meta">Auto-reply</span></div>`).join('');
+  return `<div class="phone"><div class="screen">${phoneHead(null,'Buyer Connect','Official account · Tower B updates')}
+   <div class="thread" id="thread">
+    <span class="chip-date">2 November</span>
+    <div class="bub" id="b-update"><span class="k blue">Monthly update · Tower B · November</span>${tower(14,22)}
+      <div>Slab 14 is complete. Next: slab 15, planned for December.</div><span class="tag good">&#10003; Construction on track this month</span>
+      <button type="button" class="act" data-view="home">Open My Home</button><span class="meta">2 Nov · 10:00</span></div>
+    <span class="chip-date">28 November</span>
+    <div class="bub" id="b-pay"><span class="k amber">Payment demand raised</span><div>Slab 14 is complete, so your next instalment of <b>&#8377;8,50,000</b> is due on <b>5 January</b>.</div>
+      <button type="button" class="act" data-view="home" data-hl="pay">View amount and bank details</button><span class="meta">28 Nov · 09:15</span></div>
+    <span class="chip-date">2 December</span>
+    ${review}${buyerMsgs}${extras}
+   </div>
+   <form class="composer" id="composer"><label for="msg" class="sr" style="position:absolute;left:-9999px">Message</label><input id="msg" autocomplete="off" placeholder="Ask a question…"><button type="submit" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></form>
+  </div></div>`;
+}
+function verify(){
+  return `<div class="phone"><div class="screen">${phoneHead('chat','My Home','Secure access')}
+   <form class="page" id="otpform" novalidate>
+    <div class="card" style="gap:12px">
+     <div class="lock" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+     <h3 style="font-size:18px">Confirm it’s you</h3>
+     <div style="font-size:14px;color:var(--ink-2)">We’ve sent a 6-digit code to your WhatsApp at <b>+91 98••• ••210</b>, the number on your booking.</div>
+     <div class="field"><label for="otp">Code</label><input id="otp" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" value="${esc(S.otpVal)}"></div>
+     <label class="check" for="remember"><input type="checkbox" id="remember" ${S.remember?'checked':''}><span>Remember this phone for 30 days</span></label>
+     ${S.otpErr?`<div class="err" role="alert">${esc(S.otpErr)}</div>`:''}
+     <button type="submit" class="cta">Open My Home</button>
+     <div class="upd">The code expires in 5 minutes. Five wrong tries lock access for 30 minutes.</div>
+     <div class="upd">${S.resends>0?`<button type="button" class="linkbtn" data-resend>Resend code</button> · ${S.resends} left this hour`:'No resends left this hour'}</div>
+    </div>
+    <div class="note" style="padding:0 4px">A forwarded link is no use without this code. In this prototype, any 6 digits work.</div>
+   </form></div></div>`;
+}
+function home(){
+  const d=dateFor();
+  const showRef=S.scenario!=='revised'&&!S.queryOpen;
+  const acct=S.showBank?'9876 5432 1012 04':'•••• •••• •••• 04';
+  const ifsc=S.showBank?'SMPL0001234':'SMPL•••••••';
+  return `<div class="phone"><div class="screen">${phoneHead('chat','My Home · B-1204','Ramesh K. · Tower B')}
+   <div class="page">
+    <div class="card hero"><div class="row" style="align-items:center"><small>${S.scenario==='revised'?'Possession (revised)':'Committed possession'}</small>${S.scenario==='revised'?'<span class="tag warn">Revised 2 Dec</span>':'<span class="tag good">Confirmed 2 Dec</span>'}</div>
+      <div class="big">${d.now}</div><small>${d.was?`Was ${d.was} · reason sent on chat · `:''}Next review 15 February</small></div>
+    <div class="card" id="pay-card"><div class="row"><h3>Payment schedule</h3><span class="upd">Updated 28 Nov</span></div>
+      <div class="row"><span>Paid so far</span><span>&#8377;25,50,000 of &#8377;85,00,000</span></div>
+      <div class="bar" aria-hidden="true"><i style="width:30%"></i></div>
+      <span class="upd">Includes the 1% TDS you deduct on each instalment, which counts as paid once we receive your Form 16B.</span>
+      <div class="row"><span>Booking and agreement</span><span class="ok">Paid</span></div>
+      <div class="row"><span>Plinth and slab 5</span><span class="ok">Paid</span></div>
+      <div class="row"><span>Slab 10</span><span class="ok">Paid</span></div>
+      <div class="row due"><span><b>Slab 14 · &#8377;8,50,000</b></span><span>Due 5 Jan</span></div>
+      <div class="row"><span>Slab 18</span><span class="pend">On completion</span></div>
+      <div class="row"><span>Finishing and possession</span><span class="pend">On completion</span></div>
+      <span class="upd">Construction-linked plan: each instalment is raised only when its stage is complete.</span></div>
+    <div class="card" id="bank-card"><div class="row"><h3>Pay into</h3><span class="upd">Shown only on this page</span></div>
+      <div class="row"><span>Account</span><span>Tower B RERA collection account</span></div>
+      <div class="row"><span>Account no.</span><span style="font-variant-numeric:tabular-nums">${acct}</span></div>
+      <div class="row"><span>IFSC</span><span>${ifsc}</span></div>
+      <span class="upd">This account number is unique to B-1204, so your payment is matched to your unit automatically.</span>
+      <button type="button" class="linkbtn" data-showbank style="align-self:flex-start">${S.showBank?'Hide full details':'Show full details'}</button>
+      <div class="warnbox"><b>We never change bank details over WhatsApp or phone.</b> If anyone asks you to pay into a different account, don’t pay. Call your RM on the number in your agreement.</div></div>
+    <div class="card"><div class="row"><h3>Documents</h3><span class="upd">Updated 14 Nov</span></div>
+      <div class="row"><span>Agreement for Sale</span><span class="ok">Registered · <button type="button" class="linkbtn" data-dl="Agreement for Sale">Download</button></span></div>
+      <div class="row"><span>Home loan papers</span><span class="ok">Received · <button type="button" class="linkbtn" data-dl="Home loan papers">Download</button></span></div>
+      <div class="row"><span>Bank NOC for disbursal</span><span class="amb">With legal team</span></div>
+      <span class="upd">Downloads are watermarked with your name and unit.</span></div>
+    ${showRef?`<div class="card"><h3>Know someone looking for a home?</h3>
+      <div style="font-size:13.5px;color:var(--ink-2)">Invite one friend to the Tower B site-visit day on 14 December.</div>
+      <button type="button" class="cta" data-view="refer">Refer a friend</button></div>`:''}
+    <div class="foot">Opened on this phone · ${S.remember?'remembered until 2 Jan':'session ends after 15 minutes idle'} · <button type="button" class="linkbtn" data-logout>Log out</button></div>
+   </div></div></div>`;
+}
+function refer(){
+  if(S.ref.sent){return `<div class="phone"><div class="screen">${phoneHead('home','Invite sent','Tower B site-visit day')}<div class="page">
+    <div class="card"><span class="tag good">&#10003; Invite sent to ${esc(S.ref.name)}</span><div style="font-size:14px">We'll check they aren't already with our sales team or a broker, then offer them a slot at the site-visit day.</div>
+     <div class="track"><div><span class="dot ok"></span><span>Invite sent</span><span class="ok">Done</span></div><div><span class="dot now"></span><span>Eligibility check</span><span class="amb">In progress</span></div><div><span class="dot"></span><span>Site visit</span><span class="pend">14 Dec</span></div><div><span class="dot"></span><span>Agreement registered</span><span class="pend">Pending</span></div><div><span class="dot"></span><span>&#8377;50,000 reward released</span><span class="pend">After registration</span></div></div></div>
+    <button type="button" class="cta" data-view="home">Back to My Home</button></div></div></div>`}
+  return `<div class="phone"><div class="screen">${phoneHead('home','Invite one friend','')}
+   <form class="page" id="refform" novalidate>
+    <div class="sec">About your friend</div>
+    <div class="field"><label for="r-name">Full name</label><input id="r-name" autocomplete="off" placeholder="As on their ID"></div>
+    <div class="field"><label for="r-phone">Mobile number</label><input id="r-phone" inputmode="numeric" autocomplete="off" placeholder="10-digit mobile"></div>
+    <div class="two"><div class="field"><label for="r-rel">Relationship</label><select id="r-rel"><option>Friend</option><option>Family</option><option>Colleague</option><option>Neighbour</option></select></div>
+     <div class="field"><label for="r-area">Lives or works in</label><input id="r-area" autocomplete="off" placeholder="Locality"></div></div>
+    <div class="sec">What they're looking for</div>
+    <div class="two"><div class="field"><label for="r-size">Home size</label><select id="r-size"><option>2 BHK</option><option>3 BHK</option><option>Not sure</option></select></div>
+     <div class="field"><label for="r-budget">Budget</label><select id="r-budget"><option>&#8377;70–90L</option><option>&#8377;90L–1.2Cr</option><option>Above &#8377;1.2Cr</option></select></div></div>
+    <div class="two"><div class="field"><label for="r-when">Plans to buy</label><select id="r-when"><option>Within 3 months</option><option>3–6 months</option><option>6–12 months</option><option>Just exploring</option></select></div>
+     <div class="field"><label for="r-loan">Home loan</label><select id="r-loan"><option>Pre-approved</option><option>Will apply</option><option>Not needed</option></select></div></div>
+    <div class="field"><label for="r-broker">Already spoken to our sales team or a broker about Tower B?</label><select id="r-broker"><option>No</option><option>Yes</option><option>Not sure</option></select></div>
+    <label class="check" for="r-consent"><input type="checkbox" id="r-consent"><span>My friend has agreed to be contacted by the sales team about this visit.</span></label>
+    ${S.ref.err?`<div class="err" role="alert">${esc(S.ref.err)}</div>`:''}
+    <button type="submit" class="cta">Send invite</button>
+   </form></div></div>`;
+}
+function inbox(){
+  const open=S.queue.length;
+  const sel=S.queue.find(q=>q.id===S.selected)||S.queue[0];
+  const answeredPct=S.answered?'91%':'88%';
+  const list=[...S.queue].sort((a,b)=>a.h-b.h).map(q=>`<button type="button" class="qi" data-sel="${q.id}" aria-pressed="${sel&&q.id===sel.id}"><span class="t"><b>${esc(q.who)}</b><span class="tag ${q.cls}">${esc(q.left)}</span></span><p>${esc(q.text)}</p><small>${esc(q.type)} · assigned to ${esc(q.rm)} · acknowledged automatically</small></button>`).join('');
+  const d=dateFor();
+  const refStat=S.scenario==='revised'?'<span class="amb">Paused · date revised 2 Dec</span>':S.queryOpen?'<span class="amb">Paused · open question</span>':'<span class="ok">Eligible to refer</span>';
+  const detail=sel?`<div class="conv"><h3 style="font-size:17px">${esc(sel.who)}</h3>
+     <div class="bub out" style="max-width:100%">${esc(sel.text)}</div>
+     <div class="bub" style="max-width:100%;font-size:13px;color:var(--ink-2)">Auto-reply sent: ${esc(sel.rm)} will reply within 48 hours.</div>
+     ${sel.win?`<div class="chip-win open">Free reply window: ${esc(sel.win)} left. After that, replies go as a paid WhatsApp template.</div>`:`<div class="chip-win closed">Free reply window closed. This reply goes as a paid WhatsApp template.</div>`}
+     <label for="reply" style="font-size:13px;font-weight:600">Reply</label>
+     <textarea id="reply">${sel.buyer?'No. Your loan is released stage by stage, so the bank pays the slab 14 demand, due 5 January, as planned. The revised possession date only moves your final disbursal.':''}</textarea>
+     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" data-send="${sel.id}">Send and close</button><button type="button" class="btn" data-esc="${sel.id}">Ask finance or legal</button></div></div>
+    <div class="ctx"><h3 style="font-size:14px">Buyer status ${sel.buyer?'(from My Home)':''}</h3>
+     ${sel.buyer?`<div class="row"><span>Possession</span><span>${d.now}${d.was?' · revised':''}</span></div><div class="row"><span>Next demand</span><span>Slab 14 · due 5 Jan</span></div><div class="row"><span>Bank NOC</span><span class="amb">With legal team</span></div><div class="row"><span>Agreement</span><span class="ok">Registered</span></div><div class="row"><span>Referral</span>${refStat}</div>`:`<div class="row"><span>Unit</span><span>${esc(sel.who.split('· ')[1]||'')}</span></div><div class="row"><span>Open queries</span><span>1</span></div>`}
+     <span class="upd">Synced from ERP · 3 Dec, 09:00</span></div>`
+   :`<div class="empty"><b>Queue clear.</b><br>Every open question has been answered.</div>`;
+  return `<div class="console"><div class="c-head"><div><h3>Buyer questions · Towers A, B, C</h3><p>Shared RM inbox on the company WhatsApp number · metrics show illustrative post-launch values against today's baselines</p></div>
+    <div class="kpis"><div class="kpi hl"><small>Inbound per buyer, this month</small><b>3.0</b><em>baseline 4.2 · target &lt;3.2</em></div>
+     <div class="kpi"><small>Answered in 48h, this week</small><b>${answeredPct}</b><em>baseline 51%</em></div>
+     <div class="kpi"><small>Open now</small><b>${open}</b></div>
+     <div class="kpi"><small>Escalations this month</small><b>9</b><em>baseline ~45</em></div></div></div>
+   <div class="c-body"><div class="queue"><div class="sec" style="margin:0 0 2px">Queue · oldest deadline first</div>${list||'<div class="empty">No open questions</div>'}</div><div class="detail">${detail}</div></div></div>`;
+}
+
+function render(){
+  const s=STEPS[idx()];let view=S.view||s.view;
+  if((view==='home'||view==='refer')&&!S.verified){if(S.hl)S.pendingHl=S.hl;view='verify'}
+  $('main').classList.toggle('wide',view==='inbox');
+  rail();panel();
+  $('stage').innerHTML=view==='chat'?chat():view==='verify'?verify():view==='home'?home():view==='refer'?refer():inbox();
+  if(view==='chat'){const th=$('thread');const f=s.focus&&$(s.focus);
+    const place=()=>{if(!th)return;if(f){th.scrollTop=Math.max(0,f.offsetTop-th.offsetTop-12)}else th.scrollTop=th.scrollHeight};
+    if(f)f.classList.add('focus');place();try{document.fonts.ready.then(place)}catch(e){}
+    setTimeout(place,400);setTimeout(place,1500)}
+  if(view==='home'&&S.hl==='pay'){['pay-card','bank-card'].forEach(k=>{const c=$(k);if(c)c.style.boxShadow='0 0 0 3px var(--accent)'});const b=$('bank-card');if(b)b.scrollIntoView({block:'nearest'})}
+  S.hl=null;
+}
+function go(id,fromHash,open){
+  if(!id)return;const s=STEPS.find(x=>x.id===id);if(!s)return;
+  S.step=id;S.view=null;
+  if(fromHash){ // canonical state for direct links and screenshots
+    if(['update','delay','payment','home','inbox'].includes(id)){S.queryOpen=true;S.replied=false;S.answered=0;if(!S.queue.find(q=>q.id==='q1'))S.queue.unshift({id:'q1',who:'Ramesh K. · B-1204',type:'Possession',text:'Will the revised date change my home loan disbursal?',left:'5h left',cls:'warn',rm:'Priya',buyer:true,h:5,win:'6h 42m'});S.selected='q1'}
+    if(id==='refer'){S.queryOpen=false;S.queue=S.queue.filter(q=>q.id!=='q1');S.replied=true;S.replyText=S.replyText||'No. Your loan is released stage by stage, so slab 14 is paid on schedule.'}
+    S.verified=!!open||id==='refer';S.otpErr='';S.otpVal='';S.showBank=false;
+  }
+  if(id==='delay')S.scenario=S.scenario||'revised';
+  try{if(location.hash.replace('#','').replace(/-shot$/,'')!==id)history.replaceState(null,'','#'+id+(document.body.classList.contains('shot')?'-shot':''))}catch(e){}
+  render();window.scrollTo({top:0});
+}
+
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g&&g.dataset.go){go(g.dataset.go);return}
+  const v=e.target.closest('[data-view]');if(v){S.view=v.dataset.view;S.hl=v.dataset.hl||null;
+    const map={chat:'delay',home:'home',refer:'refer'};if(map[S.view]&&S.step!==map[S.view]){S.step=map[S.view];S.view=null}
+    render();return}
+  const c=e.target.closest('[data-scn]');if(c){S.scenario=c.dataset.scn;render();return}
+  const q=e.target.closest('[data-sel]');if(q){S.selected=q.dataset.sel;render();return}
+  const sd=e.target.closest('[data-send]');if(sd){const id=sd.dataset.send;const txt=($('reply')||{}).value||'';
+    if(!txt.trim()){toast('Write a reply before sending.');return}
+    const item=S.queue.find(x=>x.id===id);S.queue=S.queue.filter(x=>x.id!==id);S.answered++;
+    const viaTpl=item&&!item.win;
+    if(item&&item.buyer){S.queryOpen=false;S.replied=true;S.replyText=txt.trim();S.extra=[];toast(viaTpl?'Reply sent to Ramesh as a paid WhatsApp template, because the 24-hour window had closed.':'Reply sent to Ramesh on WhatsApp. Question closed within 48 hours.')}
+    else toast(viaTpl?'Reply sent as a paid WhatsApp template, because the 24-hour window had closed.':'Reply sent. Question closed within its 48-hour window.');
+    S.selected=(S.queue[0]||{}).id;render();return}
+  const es=e.target.closest('[data-esc]');if(es){toast('Shared with finance and legal. The 48-hour clock keeps running.');return}
+  const rs=e.target.closest('[data-resend]');if(rs){if(S.resends>0){S.resends--;S.otpVal=($('otp')||{}).value||'';render();toast(`New code sent to your WhatsApp. ${S.resends} resend${S.resends===1?'':'s'} left this hour.`)}return}
+  const sb=e.target.closest('[data-showbank]');if(sb){const pg=$('stage').querySelector('.page');const st=pg?pg.scrollTop:0;S.showBank=!S.showBank;render();const p2=$('stage').querySelector('.page');if(p2)p2.scrollTop=st;return}
+  const dl=e.target.closest('[data-dl]');if(dl){toast(`Sample only: ${dl.dataset.dl} would download, watermarked “Ramesh K. · B-1204”.`);return}
+  const lo=e.target.closest('[data-logout]');if(lo){S.verified=false;S.otpVal='';S.otpErr='';S.view='home';render();toast('Logged out. A new code is needed next time.');return}
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  if(e.target.id==='otpform'){const v=(($('otp')||{}).value||'').replace(/\D/g,'');S.otpVal=v;S.remember=!!($('remember')||{}).checked;
+    if(v.length!==6){S.otpErr='Enter the 6-digit code from your WhatsApp.';render();return}
+    S.verified=true;S.otpErr='';S.otpVal='';S.hl=S.pendingHl;S.pendingHl=null;render();toast(S.remember?'Verified. This phone is remembered for 30 days.':'Verified for this session.');return}
+  if(e.target.id==='composer'){const m=$('msg');const t=(m.value||'').trim();if(!t)return;S.extra.push(t);
+    S.queue.push({id:'x'+Date.now(),who:'Ramesh K. · B-1204',type:'New question',text:t,left:'48h left',cls:'info',rm:'Priya',buyer:true,h:48,win:'24h'});S.queryOpen=true;S.view='chat';render();toast('Acknowledged instantly. It is now in the RM inbox.');return}
+  if(e.target.id==='refform'){const name=$('r-name').value.trim(),ph=$('r-phone').value.replace(/\D/g,''),broker=$('r-broker').value,consent=$('r-consent').checked;
+    let err='';if(!name)err='Add your friend’s full name.';else if(ph.length!==10)err='Enter a 10-digit mobile number.';else if(broker==='Yes')err='Friends already in touch with our sales team or a broker don’t qualify for this programme.';else if(!consent)err='Confirm your friend has agreed to be contacted.';
+    S.ref.err=err;if(!err){S.ref.sent=true;S.ref.name=name;toast('Invite sent. Sales will contact your friend within 2 working days.')}
+    const keep={};if(err){['r-name','r-phone','r-rel','r-area','r-size','r-budget','r-when','r-loan','r-broker'].forEach(k=>keep[k]=$(k).value);keep.c=consent}
+    render();if(err){Object.keys(keep).forEach(k=>{if(k!=='c'&&$(k))$(k).value=keep[k]});if($('r-consent'))$('r-consent').checked=keep.c}}
+});
+
+function fromHash(){let h=(location.hash||'').replace('#','');const shot=/-shot$/.test(h);document.body.classList.toggle('shot',shot);h=h.replace(/-shot$/,'');let open=false;if(/-open$/.test(h)){open=true;h=h.replace(/-open$/,'')}go(STEPS.some(s=>s.id===h)?h:'update',true,open)}
+window.addEventListener('hashchange',fromHash);
+fromHash();
+})();
+</script>
+</body>
+</html>
