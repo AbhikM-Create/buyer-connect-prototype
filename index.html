@@ -210,18 +210,18 @@ const STEPS=[
   facts:[['Serves','Every buyer on a construction-linked plan'],['Reduces','Payment-reminder queries (27%)'],['Runs on','ERP demand event, same day · launches weeks 6–14']]},
  {id:'home',label:'My Home page',view:'home',eyebrow:'D3 · Element 2',title:'One secure page answers "where do I stand?"',
   body:'Opened from any WhatsApp link. A 6-digit code sent to the buyer’s registered WhatsApp confirms it is them, so a forwarded link is useless, and the phone is then remembered for 30 days. The page shows what has been paid, the full schedule, the one account to pay into and document status, each with a last-updated date.',
-  facts:[['Serves','Each buyer, about their own unit'],['Reduces','Legal and document queries (19%)'],['Security','Code to the registered number · bank details shown only here · downloads watermarked'],['Referral','Shown only when the buyer has no open question and no date change in the last 30 days'],['Runs on','ERP nightly, bank reconciliation, legal tracker · launches weeks 6–14']]},
+  facts:[['Serves','Each buyer, about their own unit'],['Reduces','Legal and document queries (19%)'],['Security','Code to the registered number · bank details shown only here · downloads watermarked'],['Referral','Asking a question never blocks it; paused only while the buyer has an open escalation to senior management'],['Runs on','ERP nightly, bank reconciliation, legal tracker · launches weeks 6–14']]},
  {id:'inbox',label:'RM shared inbox',view:'inbox',eyebrow:'D3 · Element 3 · internal',title:'Questions that need a person are tracked, not lost',
   body:'Buyer messages land in one shared inbox instead of personal phones. Each is acknowledged instantly with a named RM and a deadline, shown beside the buyer’s live status. WhatsApp allows a free reply only within 24 hours of the buyer’s last message; after that the reply goes as a paid template, so each question shows its window. Try answering Ramesh’s question.',
   facts:[['Serves','RMs and their managers'],['Replaces','Untracked personal chats where 49% miss 48 hours'],['Headline metric','Inbound per buyer: 4.2 today, target below 3.2'],['Runs on','WhatsApp messages in real time · buyer-to-RM mapping from the CRM · launches weeks 0–8']]},
  {id:'refer',label:'Refer a friend',view:'refer',eyebrow:'D4 · Referral mechanic',title:'Referrals come from buyers who trust us, with qualified leads',
-  body:'Invites open at booking and at the quarterly site-visit day, and pause while a buyer has an open question or a recent date change. The referrer names one friend and confirms budget, size, timeline and consent. The reward is paid only on a registered Agreement for Sale.',
+  body:'Invites open at booking and at the quarterly site-visit day, and asking a question never blocks one; a buyer with an open escalation to senior management is invited once it closes. The referrer names one friend and confirms budget, size, timeline and consent. The reward is paid only on a registered Agreement for Sale.',
   facts:[['Incentive','₹50,000 to referrer; 6 months’ maintenance waived for the friend (subject to legal sign-off)'],['Friction','One friend at a time; friends already with sales or a broker don’t qualify'],['90-day signal','Referral site visits: working at ~20 a month, failing under 10'],['Runs on','Sales CRM with a channel-partner duplicate check · payout on registration · launches month 4+']]}
 ];
 const S={step:'update',scenario:'revised',queryOpen:true,replied:false,selected:'q1',ref:{sent:false,err:''},showBank:false,
  queue:[
   {id:'q1',who:'Ramesh K. · B-1204',type:'Possession',text:'Will the revised date change my home loan disbursal?',left:'5h left',cls:'warn',rm:'Priya',buyer:true,h:5,win:'6h 42m'},
-  {id:'q2',who:'Buyer · A-0807',type:'Modification',text:'Can I change the kitchen layout before slab 10?',left:'2h left · flagged to manager',cls:'bad',rm:'Arjun',h:2,win:null},
+  {id:'q2',who:'Buyer · A-0807',type:'Modification',text:'Can I change the kitchen layout before slab 10?',left:'2h left · flagged to manager',cls:'bad',rm:'Arjun',h:2,win:null,esc:true},
   {id:'q3',who:'Buyer · B-0402',type:'Documents',text:'When will the bank NOC for disbursal be issued?',left:'22h left',cls:'info',rm:'Priya',h:22,win:null},
   {id:'q4',who:'Buyer · C-0310',type:'Payment',text:'Receipt for my last instalment has not arrived.',left:'31h left',cls:'info',rm:'Meera',h:31,win:'7h'}
  ], answered:0, extra:[]};
@@ -284,7 +284,7 @@ function chat(){
 }
 function home(){
   const d=dateFor();
-  const showRef=S.scenario!=='revised'&&!S.queryOpen;
+  const showRef=!S.escalated;
   const acct=S.showBank?'9876 5432 1012 04':'•••• •••• •••• 04';
   const ifsc=S.showBank?'SMPL0001234':'SMPL•••••••';
   return `<div class="phone"><div class="screen">${phoneHead('chat','My Home · B-1204','Ramesh K. · Tower B')}
@@ -348,7 +348,7 @@ function inbox(){
   const answeredPct=S.answered?'91%':'88%';
   const list=[...S.queue].sort((a,b)=>a.h-b.h).map(q=>`<button type="button" class="qi" data-sel="${q.id}" aria-pressed="${sel&&q.id===sel.id}"><span class="t"><b>${esc(q.who)}</b><span class="tag ${q.cls}">${esc(q.left)}</span></span><p>${esc(q.text)}</p><small>${esc(q.type)} · assigned to ${esc(q.rm)} · acknowledged automatically</small></button>`).join('');
   const d=dateFor();
-  const refStat=S.scenario==='revised'?'<span class="amb">Paused · date revised 2 Dec</span>':S.queryOpen?'<span class="amb">Paused · open question</span>':'<span class="ok">Eligible to refer</span>';
+  const refStat=sel&&sel.esc?'<span class="amb">Paused · open escalation</span>':'<span class="ok">Eligible to refer</span>';
   const detail=sel?`<div class="conv"><h3 style="font-size:17px">${esc(sel.who)}</h3>
      <div class="bub out" style="max-width:100%">${esc(sel.text)}</div>
      <div class="bub" style="max-width:100%;font-size:13px;color:var(--ink-2)">Auto-reply sent: ${esc(sel.rm)} will reply within 48 hours.</div>
@@ -357,7 +357,7 @@ function inbox(){
      <textarea id="reply">${sel.buyer?'No. Your loan is released stage by stage, so the bank pays the slab 14 demand, due 5 January, as planned. The revised possession date only moves your final disbursal.':''}</textarea>
      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" data-send="${sel.id}">Send and close</button><button type="button" class="btn" data-esc="${sel.id}">Ask finance or legal</button></div></div>
     <div class="ctx"><h3 style="font-size:14px">Buyer status ${sel.buyer?'(from My Home)':''}</h3>
-     ${sel.buyer?`<div class="row"><span>Possession</span><span>${d.now}${d.was?' · revised':''}</span></div><div class="row"><span>Next demand</span><span>Slab 14 · due 5 Jan</span></div><div class="row"><span>Bank NOC</span><span class="amb">With legal team</span></div><div class="row"><span>Agreement</span><span class="ok">Registered</span></div><div class="row"><span>Referral</span>${refStat}</div>`:`<div class="row"><span>Unit</span><span>${esc(sel.who.split('· ')[1]||'')}</span></div><div class="row"><span>Open queries</span><span>1</span></div>`}
+     ${sel.buyer?`<div class="row"><span>Possession</span><span>${d.now}${d.was?' · revised':''}</span></div><div class="row"><span>Next demand</span><span>Slab 14 · due 5 Jan</span></div><div class="row"><span>Bank NOC</span><span class="amb">With legal team</span></div><div class="row"><span>Agreement</span><span class="ok">Registered</span></div><div class="row"><span>Referral</span>${refStat}</div>`:`<div class="row"><span>Unit</span><span>${esc(sel.who.split('· ')[1]||'')}</span></div><div class="row"><span>Open queries</span><span>1</span></div>${sel.esc?'<div class="row"><span>Escalation</span><span class="amb">Open with senior management</span></div>':''}<div class="row"><span>Referral</span>${refStat}</div>`}
      <span class="upd">Synced from ERP · 3 Dec, 09:00</span></div>`
    :`<div class="empty"><b>Queue clear.</b><br>Every open question has been answered.</div>`;
   return `<div class="console"><div class="c-head"><div><h3>Buyer questions · Towers A, B, C</h3><p>Shared RM inbox on the company WhatsApp number · metrics show illustrative post-launch values against today's baselines</p></div>
