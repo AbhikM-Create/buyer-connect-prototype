@@ -167,15 +167,12 @@ main.wide .panel{position:static}
 /* secure open, bank card, reply window */
 .mark{color:var(--on-navy);font-weight:700;font-size:13px}
 .linkbtn{border:0;background:transparent;color:var(--accent);font-weight:600;cursor:pointer;padding:0;font-size:inherit;text-decoration:underline;text-underline-offset:2px}
-.otp{height:52px;width:100%;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:var(--surface);font-family:var(--f-head);font-size:24px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums}
-.lock{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
 .bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--good)}
 .warnbox{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:9px 10px;font-size:12.5px;line-height:1.45}
 .chip-win{font-size:12.5px;font-weight:600;padding:8px 10px;border-radius:9px;line-height:1.4}
 .chip-win.open{background:var(--accent-soft);color:var(--accent)}
 .chip-win.closed{background:var(--warn-soft);color:var(--warn)}
-.foot{font-size:11.5px;color:var(--ink-3);text-align:center;padding:2px 0 8px}
 
 /* screenshot mode: stage only */
 body.shot .top,body.shot .rail,body.shot .panel{display:none}
@@ -221,7 +218,7 @@ const STEPS=[
   body:'Invites open at booking and at the quarterly site-visit day, and pause while a buyer has an open question or a recent date change. The referrer names one friend and confirms budget, size, timeline and consent. The reward is paid only on a registered Agreement for Sale.',
   facts:[['Incentive','₹50,000 to referrer; 6 months’ maintenance waived for the friend (subject to legal sign-off)'],['Friction','One friend at a time; friends already with sales or a broker don’t qualify'],['90-day signal','Referral site visits: working at ~20 a month, failing under 10'],['Runs on','Sales CRM with a channel-partner duplicate check · payout on registration · launches month 4+']]}
 ];
-const S={step:'update',scenario:'revised',queryOpen:true,replied:false,selected:'q1',ref:{sent:false,err:''},verified:false,remember:true,resends:3,otpErr:'',otpVal:'',showBank:false,pendingHl:null,
+const S={step:'update',scenario:'revised',queryOpen:true,replied:false,selected:'q1',ref:{sent:false,err:''},showBank:false,
  queue:[
   {id:'q1',who:'Ramesh K. · B-1204',type:'Possession',text:'Will the revised date change my home loan disbursal?',left:'5h left',cls:'warn',rm:'Priya',buyer:true,h:5,win:'6h 42m'},
   {id:'q2',who:'Buyer · A-0807',type:'Modification',text:'Can I change the kitchen layout before slab 10?',left:'2h left · flagged to manager',cls:'bad',rm:'Arjun',h:2,win:null},
@@ -285,23 +282,6 @@ function chat(){
    <form class="composer" id="composer"><label for="msg" class="sr" style="position:absolute;left:-9999px">Message</label><input id="msg" autocomplete="off" placeholder="Ask a question…"><button type="submit" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></form>
   </div></div>`;
 }
-function verify(){
-  return `<div class="phone"><div class="screen">${phoneHead('chat','My Home','Secure access')}
-   <form class="page" id="otpform" novalidate>
-    <div class="card" style="gap:12px">
-     <div class="lock" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-     <h3 style="font-size:18px">Confirm it’s you</h3>
-     <div style="font-size:14px;color:var(--ink-2)">We’ve sent a 6-digit code to your WhatsApp at <b>+91 98••• ••210</b>, the number on your booking.</div>
-     <div class="field"><label for="otp">Code</label><input id="otp" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" value="${esc(S.otpVal)}"></div>
-     <label class="check" for="remember"><input type="checkbox" id="remember" ${S.remember?'checked':''}><span>Remember this phone for 30 days</span></label>
-     ${S.otpErr?`<div class="err" role="alert">${esc(S.otpErr)}</div>`:''}
-     <button type="submit" class="cta">Open My Home</button>
-     <div class="upd">The code expires in 5 minutes. Five wrong tries lock access for 30 minutes.</div>
-     <div class="upd">${S.resends>0?`<button type="button" class="linkbtn" data-resend>Resend code</button> · ${S.resends} left this hour`:'No resends left this hour'}</div>
-    </div>
-    <div class="note" style="padding:0 4px">A forwarded link is no use without this code. In this prototype, any 6 digits work.</div>
-   </form></div></div>`;
-}
 function home(){
   const d=dateFor();
   const showRef=S.scenario!=='revised'&&!S.queryOpen;
@@ -337,7 +317,6 @@ function home(){
     ${showRef?`<div class="card"><h3>Know someone looking for a home?</h3>
       <div style="font-size:13.5px;color:var(--ink-2)">Invite one friend to the Tower B site-visit day on 14 December.</div>
       <button type="button" class="cta" data-view="refer">Refer a friend</button></div>`:''}
-    <div class="foot">Opened on this phone · ${S.remember?'remembered until 2 Jan':'session ends after 15 minutes idle'} · <button type="button" class="linkbtn" data-logout>Log out</button></div>
    </div></div></div>`;
 }
 function refer(){
@@ -391,10 +370,9 @@ function inbox(){
 
 function render(){
   const s=STEPS[idx()];let view=S.view||s.view;
-  if((view==='home'||view==='refer')&&!S.verified){if(S.hl)S.pendingHl=S.hl;view='verify'}
   $('main').classList.toggle('wide',view==='inbox');
   rail();panel();
-  $('stage').innerHTML=view==='chat'?chat():view==='verify'?verify():view==='home'?home():view==='refer'?refer():inbox();
+  $('stage').innerHTML=view==='chat'?chat():view==='home'?home():view==='refer'?refer():inbox();
   if(view==='chat'){const th=$('thread');const f=s.focus&&$(s.focus);
     const place=()=>{if(!th)return;if(f){th.scrollTop=Math.max(0,f.offsetTop-th.offsetTop-12)}else th.scrollTop=th.scrollHeight};
     if(f)f.classList.add('focus');place();try{document.fonts.ready.then(place)}catch(e){}
@@ -408,7 +386,7 @@ function go(id,fromHash,open){
   if(fromHash){ // canonical state for direct links and screenshots
     if(['update','delay','payment','home','inbox'].includes(id)){S.queryOpen=true;S.replied=false;S.answered=0;if(!S.queue.find(q=>q.id==='q1'))S.queue.unshift({id:'q1',who:'Ramesh K. · B-1204',type:'Possession',text:'Will the revised date change my home loan disbursal?',left:'5h left',cls:'warn',rm:'Priya',buyer:true,h:5,win:'6h 42m'});S.selected='q1'}
     if(id==='refer'){S.queryOpen=false;S.queue=S.queue.filter(q=>q.id!=='q1');S.replied=true;S.replyText=S.replyText||'No. Your loan is released stage by stage, so slab 14 is paid on schedule.'}
-    S.verified=!!open||id==='refer';S.otpErr='';S.otpVal='';S.showBank=false;
+    S.showBank=false;
   }
   if(id==='delay')S.scenario=S.scenario||'revised';
   try{if(location.hash.replace('#','').replace(/-shot$/,'')!==id)history.replaceState(null,'','#'+id+(document.body.classList.contains('shot')?'-shot':''))}catch(e){}
@@ -430,16 +408,11 @@ document.addEventListener('click',e=>{
     else toast(viaTpl?'Reply sent as a paid WhatsApp template, because the 24-hour window had closed.':'Reply sent. Question closed within its 48-hour window.');
     S.selected=(S.queue[0]||{}).id;render();return}
   const es=e.target.closest('[data-esc]');if(es){toast('Shared with finance and legal. The 48-hour clock keeps running.');return}
-  const rs=e.target.closest('[data-resend]');if(rs){if(S.resends>0){S.resends--;S.otpVal=($('otp')||{}).value||'';render();toast(`New code sent to your WhatsApp. ${S.resends} resend${S.resends===1?'':'s'} left this hour.`)}return}
   const sb=e.target.closest('[data-showbank]');if(sb){const pg=$('stage').querySelector('.page');const st=pg?pg.scrollTop:0;S.showBank=!S.showBank;render();const p2=$('stage').querySelector('.page');if(p2)p2.scrollTop=st;return}
   const dl=e.target.closest('[data-dl]');if(dl){toast(`Sample only: ${dl.dataset.dl} would download, watermarked “Ramesh K. · B-1204”.`);return}
-  const lo=e.target.closest('[data-logout]');if(lo){S.verified=false;S.otpVal='';S.otpErr='';S.view='home';render();toast('Logged out. A new code is needed next time.');return}
 });
 document.addEventListener('submit',e=>{
   e.preventDefault();
-  if(e.target.id==='otpform'){const v=(($('otp')||{}).value||'').replace(/\D/g,'');S.otpVal=v;S.remember=!!($('remember')||{}).checked;
-    if(v.length!==6){S.otpErr='Enter the 6-digit code from your WhatsApp.';render();return}
-    S.verified=true;S.otpErr='';S.otpVal='';S.hl=S.pendingHl;S.pendingHl=null;render();toast(S.remember?'Verified. This phone is remembered for 30 days.':'Verified for this session.');return}
   if(e.target.id==='composer'){const m=$('msg');const t=(m.value||'').trim();if(!t)return;S.extra.push(t);
     S.queue.push({id:'x'+Date.now(),who:'Ramesh K. · B-1204',type:'New question',text:t,left:'48h left',cls:'info',rm:'Priya',buyer:true,h:48,win:'24h'});S.queryOpen=true;S.view='chat';render();toast('Acknowledged instantly. It is now in the RM inbox.');return}
   if(e.target.id==='refform'){const name=$('r-name').value.trim(),ph=$('r-phone').value.replace(/\D/g,''),broker=$('r-broker').value,consent=$('r-consent').checked;
